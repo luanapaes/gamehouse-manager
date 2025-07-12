@@ -1,0 +1,35 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Game House - Controle de Clientes</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1 >Controle de Clientes - Game House</h1>
+    <form id="client-form">
+      <input type="text" id="name" placeholder="Nome do cliente" autofocus required />
+      <input type="number" id="hours" placeholder="Horas contratadas" min="1" required />
+      <select id="payment">
+        <option value="Dinheiro">Dinheiro</option>
+        <option value="Pix">Pix</option>
+        <option value="Cartão">Cartão</option>
+      </select>
+      <button type="submit">Adicionar Cliente</button>
+    </form>
+
+    <p id="total">Total do dia: R$ 0,00</p>
+
+    <h2>Clientes Ativos</h2>
+    <div id="clients"></div>
+
+    <h2>Histórico do Dia</h2>
+    <div id="history"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
