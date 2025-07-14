@@ -88,6 +88,20 @@ form button:hover {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+
+  button.pause-btn{
+    margin-top: 20px;
+    width: 30%;
+    height: 25px;
+    border: 1px solid red;
+    background: transparent;
+    cursor: pointer;
+    transition: all .6s ease;
+
+    &:hover{
+      background-color: rgb(245, 190, 190);
+    }
+  }
 }
 
 .card .info p {
@@ -155,6 +169,19 @@ form button:hover {
 
 .pagination-controls button:hover:not(:disabled) {
   background-color: #256f48;
+}
+
+.historico-por-dia button{
+  background-color: #99ebbc;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all .6s ease;
+
+  &:hover{
+    background-color: #69e09d;
+  }
 }
 
 /* Responsividade extra */

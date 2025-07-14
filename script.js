@@ -28,7 +28,9 @@ form.addEventListener("submit", (e) => {
     start: now.toISOString(),
     end: end.toISOString(),
     payment,
-    hours
+    hours,
+    paused: false,
+    remainingTime: null
   };
 
   activeClients.push(client);
@@ -94,7 +96,7 @@ function createClientCard(client) {
   card.className = "card";
 
   const startTime = new Date(client.start);
-  const endTime = new Date(client.end);
+  let endTime = new Date(client.end);
 
   const info = document.createElement("div");
   info.className = "info";
@@ -112,17 +114,38 @@ function createClientCard(client) {
   const timer = document.createElement("div");
   timer.className = "timer";
 
-  const interval = setInterval(() => {
+  const updateTime = () => {
     const finished = updateTimer(timer, endTime);
     if (finished) {
-      clearInterval(interval);
       timer.textContent = "Tempo esgotado";
       timer.style.color = "red";
-      alertSound.play();
+      alertSound?.play();
     }
+  };
+
+  let interval = setInterval(() => {
+    if (!client.paused) updateTime();
   }, 1000);
 
-  updateTimer(timer, endTime);
+  updateTime();
+
+  const pauseBtn = document.createElement("button");
+  pauseBtn.classList.add("pause-btn");
+  pauseBtn.textContent = "Pausar";
+  pauseBtn.onclick = () => {
+    if (!client.paused) {
+      client.remainingTime = endTime - new Date();
+      client.paused = true;
+      pauseBtn.textContent = "Retomar";
+    } else {
+      endTime = new Date(Date.now() + client.remainingTime);
+      client.end = endTime.toISOString();
+      client.remainingTime = null;
+      client.paused = false;
+      pauseBtn.textContent = "Pausar";
+    }
+    saveClients();
+  };
 
   const doneBtn = document.createElement("button");
   doneBtn.className = "done-btn";
@@ -139,6 +162,7 @@ function createClientCard(client) {
 
   card.appendChild(info);
   card.appendChild(timer);
+  card.appendChild(pauseBtn);
   card.appendChild(doneBtn);
 
   return card;
@@ -164,13 +188,16 @@ function encerrarCliente(client, now, startTime) {
     historyDiv.appendChild(sectionDia);
   }
 
-  clientHistory.push({
+  const clientRecord = {
+    id: client.id,
     name: client.name,
     start: startTime.toISOString(),
     end: now.toISOString(),
     payment: client.payment,
     hours: client.hours
-  });
+  };
+
+  clientHistory.push(clientRecord);
   localStorage.setItem("clientHistory", JSON.stringify(clientHistory));
 
   total += client.hours * 5;
@@ -187,11 +214,16 @@ function updateTimer(element, endTime) {
   const now = new Date();
   const diff = endTime - now;
   if (diff <= 0) {
+    element.textContent = "00:00:00";
     return true;
   }
-  const minutes = Math.floor(diff / 1000 / 60);
-  const seconds = Math.floor((diff / 1000) % 60);
-  element.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+  const totalSeconds = Math.floor(diff / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  element.textContent = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   return false;
 }
 
@@ -260,6 +292,42 @@ function renderHistoryDay(clients) {
           <p>Valor pago: R$ ${(client.hours * 5).toFixed(2)}</p>
         </div>
       `;
+
+      // botão para renovar horas contratadas após o tempo esgotar
+      const renewBtn = document.createElement("button");
+      renewBtn.classList.add("renew-btn");
+      renewBtn.textContent = "Renovar";
+      renewBtn.onclick = () => {
+        const inputHours = prompt(`Quantas horas deseja adicionar para ${client.name}?`, client.hours);
+        const newHours = parseFloat(inputHours);
+
+        if (isNaN(newHours) || newHours <= 0) {
+          alert("Digite um valor válido.");
+          return;
+        }
+
+        const newNow = new Date();
+        const newEnd = new Date(newNow.getTime() + newHours * 60 * 60 * 1000);
+
+        const renewedClient = {
+          id: Date.now(),
+          name: client.name,
+          start: newNow.toISOString(),
+          end: newEnd.toISOString(),
+          payment: client.payment,
+          hours: newHours,
+          paused: false,
+          remainingTime: null
+        };
+
+        activeClients.push(renewedClient);
+        saveClients();
+        renderClients();
+        alert(`Cliente ${client.name} renovado com mais ${newHours}h.`);
+      };
+
+
+      card.appendChild(renewBtn);
       container.appendChild(card);
     });
 
